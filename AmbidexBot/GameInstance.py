@@ -282,7 +282,7 @@ class GameInstance:
             return 0
         
 
-
+    #funcao que distribui os players pelas portas , pos votacao
     def setPlayerDoors(self,combi):
         self.setProposedColorCombo(combi)
         for player in self.PlayerArray:
