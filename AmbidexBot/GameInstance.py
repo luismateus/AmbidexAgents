@@ -82,15 +82,10 @@ class GameInstance:
 
 
     def createGame(self,creatorName,creatorObject):
-        if(not self.InProgress):
-            self.PlayerArray.append(Player(creatorName,Species.HUMAN))
-            self.UserObjects[creatorName] = creatorObject
-            self.InProgress = True
-            print(creatorName, "created a new game.")
-            return True
-        else:
-            print(creatorName, "failed to create a game instance.")
-            return False
+        self.PlayerArray.append(Player(creatorName,Species.HUMAN))
+        self.UserObjects[creatorName] = creatorObject
+        print(creatorName, "created a new game.")
+        return True
 
     def endGame(self):
         self.clearGame()

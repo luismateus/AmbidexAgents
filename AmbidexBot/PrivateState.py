@@ -4,9 +4,10 @@ class PrivateState:
 
     def __init__(self,cValueBase):
         self.opponentStateArray = [OpponentState(),OpponentState(),OpponentState(),OpponentState(),OpponentState(),OpponentState(),OpponentState(),OpponentState()]
-        self.promiseHistory = []
-        self.decisionThreshold = 0
-        self.emotionalMultiplier = 0
+        self.promiseHistory = []            #array which stores the promises made as pairs
+        self.decisionThreshold = 0          #mid-value on which the player has 50% chance to ally or betray
+        self.emotionalMultiplier = 1
+        self.honorFactor = 1                #multiplies by promise weight
 
     
         
