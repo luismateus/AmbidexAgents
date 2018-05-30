@@ -11,7 +11,7 @@ def main():
     game = GameInstance()
     playerArray = game.createGame()
     game_ = ET.Element("Game")
-    game.startGame()
+    game.startGame()        #randomizes the bracelets
 
     while(not game.doorNineOpen):
         #bots recebem as combinacoes e teem de votar numa. HOW? criar array de consideracoes para cada player
@@ -20,6 +20,7 @@ def main():
         players_ = ET.SubElement(round_, "Players")
         for player in playerArray:
             game.setPlayerCombi(player)
+            
             player_ = ET.SubElement(players_, "Player", name= player.getName())
             ET.SubElement(player_, "Points").text = str(player.getPoints()) 
             ET.SubElement(player_, "Type").text = str(player.getType())
@@ -35,7 +36,9 @@ def main():
         combiC = game.combinations["c"]
         combinations_ =ET.SubElement(round_,"Combinations")
         ET.SubElement(combinations_,"CombinationA")
+
         #HERE : put combinations in log
+        chosenCombination = game.calcVoting()
         #calcular a utilidade para cada player de acordo com os consideration values e retornar combinacao escolhida "por todos"
         #game.setPlayerDoors(combi) // combi returnada na linha anterior
         game.LockAmbidex=True
