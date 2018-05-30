@@ -13,28 +13,22 @@ from operator import itemgetter
 class GameInstance:
     
     def __init__(self,server):
+
+        self.doorNineOpen = False
         self.server = server
         self.PlayerArray = []
-        self.InProgress = False
         self.GameStarted = False
-        self.ActivePolling = False
-        self.LockAmbidex = False
-        self.AmbidexInProgress = False
         self.ColorSets = {}
         self.InitializeColorSets()
         self.GameIterations = 0
         self.CurrentColorSet = []
         self.CurrentDoorSet = []
-        self.UserObjects = {}
         self.ProposedColorCombo = ""
         self.CurrentVotes = {}
         self.CurrentVotes["a"] = []
         self.CurrentVotes["b"] = []
         self.CurrentVotes["c"] = []
         self.AmbidexGameRound = {}
-        self.MachinePersonalities = ["Cooperator","Undecided","Killer","Cockblocker","Asshole","Paranoid"]
-        #self.MachineNames = ["Kye Dec","Sad Otter","Mac DeMarco","Pouty Maki","Mandy","Reinhardt","Kim Jong-Un","Sky The Magician","Brownie Cheesecake","Peter P. Porter","Funyarinpa","Hector Dec","Rick Green","Cass","Niklas Balk","Josharu Haegime","Daisy Peteller","Random Jamie Variant","Billie J. Gervaise","Masashiro Amane","Harry Peteller","Felix Dec","Samuel Dec","Eric Porter","Heinrich Porter","9th Man"]
-        self.MachineNames = self.parseBotNamesFile("sadOttersNameList.txt")
         self.cyanLot = []
         self.yellowLot = []
         self.magentaLot = []
@@ -46,29 +40,7 @@ class GameInstance:
         self.combinations = {"a": [[],[],[]], "b": [[],[],[]], "c": [[],[],[]]}
         self.playerObjectives = {}
 
-        
-    def clearGame(self):
-        self.PlayerArray.clear()
-        self.InProgress = False
-        self.GameStarted = False
-        self.ActivePolling = False
-        self.LockAmbidex = False
-        self.AmbidexInProgress = False
-        self.GameIterations = 0
-        self.CurrentColorSet.clear()
-        self.CurrentDoorSet.clear()
-        self.UserObjects.clear()
-        self.ProposedColorCombo = ""
-        self.CurrentVotes.clear()
-        self.AmbidexGameRound.clear()
-        self.CurrentVotes["y"] = 0
-        self.CurrentVotes["n"] = 0
-        self.ColorSets = {}
-        self.InitializeColorSets()
-        self.MachineNames = self.parseBotNamesFile("sadOttersNameList.txt")
-        self.combinations = {"a": [[],[],[]], "b": [[],[],[]], "c": [[],[],[]]}
-        self.playerObjectives = {}
-        
+
 
     def InitializeColorSets(self):
         self.ColorSets["Primary Colors"] = [Color.RED,Color.GREEN,Color.BLUE]
@@ -81,44 +53,18 @@ class GameInstance:
         self.ColorSets["CyanSolo|MagentaPair"] = {"CYAN SOLO": Color.BLUE, "CYAN PAIR": Color.GREEN, "YELLOW SOLO": Color.GREEN, "YELLOW PAIR": Color.RED, "MAGENTA SOLO": Color.RED, "MAGENTA PAIR": Color.BLUE }
 
 
-    def createGame(self,creatorName,creatorObject):
-        self.PlayerArray.append(Player(creatorName,Species.HUMAN))
-        self.UserObjects[creatorName] = creatorObject
-        print(creatorName, "created a new game.")
-        return True
+
+    def createGame(self):
+        nameArray = ["Alice","Bob","Carolyn","Dexter","Emily","Frank","Gwen","Haynes","Igor"]
+        while(len(nameArray) > 0):
+            self.PlayerArray.append(Player(list.pop()))
+        print("A new game was created.")
+        return PlayerArray;
+
 
     def endGame(self):
-        self.clearGame()
+        self.doorNineOpen = True
 
-    def joinGame(self,playerName,playerObject):
-        if(not self.checkPlayer(playerName)):
-            self.PlayerArray.append(Player(playerName,Species.HUMAN))
-            self.UserObjects[playerName] = playerObject
-            print(playerName, "joined the current game.")
-            return True
-        else:
-            print("Error:", playerName, "is already in the game.")
-            return False
-
-    def quitGame(self,player):
-        for p in self.PlayerArray:
-            if(p.getName() == player):
-                self.PlayerArray.remove(p)
-                if(len(self.PlayerArray) == 0):
-                    self.clearGame()
-                return True
-        print("Error:", player, "tried to quit a game they were not in.")
-        return False
-
-    def addMachine(self):
-        machineName = random.choice(self.MachineNames)
-        self.MachineNames.remove(machineName)
-        machinePlayer = Player(machineName,Species.MACHINE)
-        machinePlayer.setPersonality(random.choice(self.MachinePersonalities))
-        self.PlayerArray.append(machinePlayer)
-        print("Bot", machineName, "joined the current game.")
-        print(machineName + "'s personality is " + machinePlayer.getPersonality())
-        return machinePlayer
 
 
     def printPlayers(self):
@@ -128,16 +74,14 @@ class GameInstance:
             messageArray = sorted(messageArray,key=itemgetter(1,2))
         return tabulate(messageArray, headers=['Name', 'Color','Type'])
 
+
     def startGame(self):
-        if(not self.checkPlayerLimit()):
-            self.GameStarted = True
-            self.GameIterations += 1
-            self.randomizeBracelets()
-            self.generatePlayerObjectives()
-            return True
-        else:
-            return False
-            
+        self.GameIterations += 1
+        self.randomizeBracelets()
+        #self.generatePlayerObjectives()
+        
+
+
     def randomizeBracelets(self):
         playerSet = self.PlayerArray.copy()
         finalSet = []
@@ -318,9 +262,6 @@ class GameInstance:
         self.greenLot.clear()
         self.blueLot.clear()
 
-    def checkInProgress(self):
-        return (self.InProgress)
-
     def checkGameStarted(self):
         return (self.GameStarted)
 
@@ -458,4 +399,4 @@ class GameInstance:
                 self.ProposedColorCombo = "CyanSolo|MagentaPair"
 
     def clearCombi(self):
-        self.combinations = {"a": [[],[],[]], "b": [[],[],[]], "c": [[],[],[]]}
+        self.combinations = {"a": [[],[],[]], "b": [[],[],[]], "c": [[],[],[]]}  #apaga as combinaçoes possiveis de distribuiçao dos jogadores numa determinada ronda
