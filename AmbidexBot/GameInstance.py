@@ -9,6 +9,8 @@ from Status import Status
 from Vote import Vote
 from tabulate import tabulate
 from operator import itemgetter
+from PrivateState import PrivateState
+from OpponentState import OpponentState
 
 class GameInstance:
     
@@ -42,7 +44,7 @@ class GameInstance:
 
 
 
-    def InitializeColorSets(self):
+    def InitializeColors(self):
         self.ColorSets["Primary Colors"] = [Color.RED,Color.GREEN,Color.BLUE]
         self.ColorSets["Complementary Colors"] = [Color.CYAN,Color.YELLOW,Color.MAGENTA]
         self.ColorSets["RedSolo|RedPair"] = {"RED SOLO": Color.CYAN, "RED PAIR": Color.CYAN, "GREEN SOLO": Color.MAGENTA, "GREEN PAIR": Color.MAGENTA, "BLUE SOLO": Color.YELLOW, "BLUE PAIR": Color.YELLOW }
@@ -400,3 +402,103 @@ class GameInstance:
 
     def clearCombi(self):
         self.combinations = {"a": [[],[],[]], "b": [[],[],[]], "c": [[],[],[]]}  #apaga as combinaçoes possiveis de distribuiçao dos jogadores numa determinada ronda
+
+
+    def calcVoting(self):
+
+        preferenceDict = {}
+
+        utilityArray = [0,0,0]
+
+        voteArray = [0,0,0]
+
+        leastSufferingArray = [0,0,0]
+
+        combi = ["a","b","c"]
+
+
+        for player in self.PlayerArray:
+            
+            preferenceArray = [0,0,0]
+
+            for i in range(3):
+                doorArray = findCombiWithPlayer(combi[i],player)
+
+                if(player.type == Type.PAIR):
+                    opponentName = doorArray[2].name
+                    opponentState = player.privateState.getOpponentState(opponentName)
+                    combiValue = opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + checkPromise(player,opponentName)
+                    preferenceArray[i] = combiValue
+                    utilityArray[i] += combiValue
+
+                elif(player.type == Type.SOLO):
+                    opponentName = doorArray[0].name
+                    opponentState = player.privateState.getOpponentState(opponentName)
+                    combiValue = opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + checkPromise(player,opponentName)
+
+                    opponentName = doorArray[1].name
+                    opponentState = player.privateState.getOpponentState(opponentName)
+                    combiValue += opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + checkPromise(player,opponentName)
+
+                    combiValue /= 2
+
+                    preferenceArray[i] = combiValue
+                    utilityArray[i] += combiValue
+
+            preferenceDict[player.name] = preferenceArray
+
+        for key in preferenceDict.keys():
+            voteArray[preferenceDict[key].index(max(preferenceDict[key]))] += 1;
+            leastSufferingArray.[preferenceDict[key].index(min(preferenceDict[key]))] += min(preferenceDict[key])
+
+        maxVoteValue = max(voteArray)
+        drawCheck = 0
+        for v in range(len(voteArray)):
+            if(voteArray[v] == maxVoteValue):
+                drawCheck += 1
+
+        if(drawCheck > 1):          #verificar se há empate de votos nas combinações
+                                #vê utility
+            maxUtilityValue = max(utilityArray)
+            utilityCheck = 0
+            for u in range(len(utilityArray)):
+                if(utilityArray[u] == maxUtilityValue):
+                    utilityCheck += 1
+
+            if(utilityCheck > 1):
+                maxLeastSufferingValue = max(leastSufferingArray)
+                sufferingCheck = 0
+                for s in range(len(leastSufferingArray)):
+                    if(leastSufferingArray[s] == maxLeastSufferingValue):
+                        sufferingCheck += 1
+
+                if(sufferingCheck > 1):
+                    return combi[0]             #if all criteria are tied, it simply returns the first combination
+                
+                else:
+                    return combi[leastSufferingArray.index(max(leastSufferingArray))]
+
+            else:
+                return combi[utilityArray.index(max(utilityArray))]
+
+        else:
+            return combi[voteArray.index(max(voteArray))]
+                    
+                    
+                    
+
+
+
+
+    def findCombiWithPlayer(self,combiName,player):
+        combi = self.combinations[combiName]
+        for lot in combi:
+            for i in range(len(lot)):
+                if player.name == lot[i]:
+                    return lot
+
+
+    def checkPromise(self,player,opponentName):
+        for promise in player.privateState.promiseHistory:
+            if(promise[0] == opponentName and promise[1] == player.name and promise[2] == "ALLY"):
+                return 2

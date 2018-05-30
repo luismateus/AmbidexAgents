@@ -10,17 +10,16 @@ def main():
     game = GameInstance()
     playerArray = game.createGame()
 
-    game.startGame()
+    game.startGame()                #randomizes the bracelets
 
     while(not game.doorNineOpen):
         #bots recebem as combinacoes e teem de votar numa. HOW? criar array de consideracoes para cada player
         game.clearCombi()
         for player in playerArray:
             game.setPlayerCombi(player)
-        combiA = game.combinations["a"]
-        combiB = game.combinations["b"]
-        combiC = game.combinations["c"]
+
         #HERE : put combinations in log
+        chosenCombination = game.calcVoting()
         #calcular a utilidade para cada player de acordo com os consideration values e retornar combinacao escolhida "por todos"
         #game.setPlayerDoors(combi) // combi returnada na linha anterior
         game.LockAmbidex=True
