@@ -100,7 +100,9 @@ def main():
                     p1 = arrayType[0]
                     opponent = game.getOpponent(p1)
                     ET.SubElement(type_,"Opponent", name=opponent).text = voteDict[opponent]                
-        
+
+        print("before starting computation")        
+
         game.computeAmbidexGame()
         
         for player in playerArray:
