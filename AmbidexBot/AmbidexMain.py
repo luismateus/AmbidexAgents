@@ -72,21 +72,42 @@ def main():
         game.setPlayerDoors(chosenCombination)          #locks the players to the respective door according to the chosen combination
         vote_ = ET.SubElement(round_, "Vote")
         voteDict = {}
-        for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
-            voteString = game.computeVote(typecolor,20)              #20 is the maximum cap value for which Ally probability is 100%
-            voteDict[typecolor]=voteString
-        for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
-            type_= ET.SubElement(vote_,"Type", name =typecolor).text = voteDict[typecolor]
-            arrayType = game.getPlayerByTypecolor(typecolor)
-            if(len(arrayType)>0):
-                p1 = arrayType[0]
-                opponent = game.getOpponent(p1)
-                ET.SubElement(type_,"Opponent", name=opponent.getColor()).text = voteDict[opponent.getColor()]
+        if(game.GameIterations%2 != 0):
+            for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
+                voteString = game.computeVote(typecolor,20)              #20 is the maximum cap value for which Ally probability is 100%
+                voteDict[typecolor]=voteString
+        else:
+            for typecolor in ["CYAN PAIR","CYAN SOLO","MAGENTA PAIR","MAGENTA SOLO","YELLOW PAIR","YELLOW SOLO"]:
+                voteString = game.computeVote(typecolor,20)
+                voteDict[typecolor]=voteString
+                
+                
+        if(game.GameIterations%2 != 0):
+            for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
+                type_= ET.SubElement(vote_,"Type", name =typecolor).text = voteDict[typecolor]
+                arrayType = game.getPlayerByTypecolor(typecolor)
+                if(len(arrayType)>0):
+                    p1 = arrayType[0]
+                    opponent = game.getOpponent(p1)
+                    ET.SubElement(type_,"Opponent", name=opponent.getColor()).text = voteDict[opponent.getColor()]
+        else:
+            for typecolor in ["CYAN PAIR","CYAN SOLO","MAGENTA PAIR","MAGENTA SOLO","YELLOW PAIR","YELLOW SOLO"]:  
+                type_= ET.SubElement(vote_,"Type", name =typecolor).text = voteDict[typecolor]
+                arrayType = game.getPlayerByTypecolor(typecolor)
+                if(len(arrayType)>0):
+                    p1 = arrayType[0]
+                    opponent = game.getOpponent(p1)
+                    ET.SubElement(type_,"Opponent", name=opponent.getColor()).text = voteDict[opponent.getColor()]                
         
-            
+        game.computeAmbidexGame()
         
-
-        #score
+        for player in playerArray:
+            if (player.getPoints()>=9):
+                if(game.willingToLeave(player)):
+                    print(game.getWinners())
+                    game.doorNineOpen=True
+                    break
+       
         
         #at end game write to log:
         tree_ = ET.ElementTree(game_)
