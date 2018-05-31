@@ -5,7 +5,6 @@ from Player import Player
 from Color import Color
 import random
 from Type import Type
-from Species import Species
 from Status import Status
 from Vote import Vote
 from tabulate import tabulate
@@ -60,7 +59,7 @@ class GameInstance:
     def createGame(self):
         nameArray = ["Alice","Bob","Carolyn","Dexter","Emily","Frank","Gwen","Haynes","Igor"]
         while(len(nameArray) > 0):
-            self.PlayerArray.append(Player(list.pop()))
+            self.PlayerArray.append(Player(nameArray.pop()))
         print("A new game was created.")
         return PlayerArray;
 
@@ -110,26 +109,6 @@ class GameInstance:
 
 
 
-    def calculateCombinations(self,soloPlayer,pairPlayer):
-        if((soloPlayer.getColor() == Color.RED and pairPlayer.getColor() == Color.RED) or (soloPlayer.getColor() == Color.GREEN and pairPlayer.getColor() == Color.GREEN) or (soloPlayer.getColor() == Color.BLUE and pairPlayer.getColor() == Color.BLUE)):
-            colorCombo = "RedSolo|RedPair"
-        if((soloPlayer.getColor() == Color.RED and pairPlayer.getColor() == Color.GREEN) or (soloPlayer.getColor() == Color.GREEN and pairPlayer.getColor() == Color.BLUE) or (soloPlayer.getColor() == Color.BLUE and pairPlayer.getColor() == Color.RED)):
-            colorCombo = "RedSolo|GreenPair"
-        if((soloPlayer.getColor() == Color.RED and pairPlayer.getColor() == Color.BLUE) or (soloPlayer.getColor() == Color.GREEN and pairPlayer.getColor() == Color.RED) or (soloPlayer.getColor() == Color.BLUE and pairPlayer.getColor() == Color.GREEN)):
-            colorCombo = "RedSolo|BluePair"
-        if((soloPlayer.getColor() == Color.CYAN and pairPlayer.getColor() == Color.CYAN) or (soloPlayer.getColor() == Color.YELLOW and pairPlayer.getColor() == Color.YELLOW) or (soloPlayer.getColor() == Color.MAGENTA and pairPlayer.getColor() == Color.MAGENTA)):
-            colorCombo = "CyanSolo|CyanPair"
-        if((soloPlayer.getColor() == Color.CYAN and pairPlayer.getColor() == Color.YELLOW) or (soloPlayer.getColor() == Color.YELLOW and pairPlayer.getColor() == Color.MAGENTA) or (soloPlayer.getColor() == Color.MAGENTA and pairPlayer.getColor() == Color.CYAN)):
-            colorCombo = "CyanSolo|YellowPair"
-        if((soloPlayer.getColor() == Color.CYAN and pairPlayer.getColor() == Color.MAGENTA) or (soloPlayer.getColor() == Color.YELLOW and pairPlayer.getColor() == Color.CYAN) or (soloPlayer.getColor() == Color.MAGENTA and pairPlayer.getColor() == Color.YELLOW)):
-            colorCombo = "CyanSolo|MagentaPair"
-        self.ProposedColorCombo = colorCombo
-        return self.getTempCombinations()
-
-
-
-
-
 
     def getOpponent(self,player):
         colortype = self.getPlayerColorType(player)     #aka "RED SOLO" or etc
@@ -138,81 +117,6 @@ class GameInstance:
             if(key != colortype and self.ColorSets[self.ProposedColorCombo][key] == playerdoor):
                 return key
 
-    def getTempCombinations(self):
-        message = ""
-        self.cyanLot.clear()
-        self.yellowLot.clear()
-        self.magentaLot.clear()
-        self.redLot.clear()
-        self.greenLot.clear()
-        self.blueLot.clear()
-        for player in self.PlayerArray:
-            bracelet = player.getColor().name + " " + player.getType().name
-            playerDoor = self.ColorSets[self.ProposedColorCombo][bracelet]
-            if(playerDoor == Color.CYAN):
-                self.cyanLot.append(player)
-            if(playerDoor == Color.YELLOW):
-                self.yellowLot.append(player)
-            if(playerDoor == Color.MAGENTA):
-                self.magentaLot.append(player)
-            if(playerDoor == Color.RED):
-                self.redLot.append(player)
-            if(playerDoor == Color.GREEN):
-                self.greenLot.append(player)
-            if(playerDoor == Color.BLUE):
-                self.blueLot.append(player)
-        if(len(self.cyanLot) != 0):
-            message += self.cyanLot[0].getName() + ", " + self.cyanLot[1].getName() + " and " + self.cyanLot[2].getName() + " will go through the Cyan Door.\n"
-            message += self.yellowLot[0].getName() + ", " + self.yellowLot[1].getName() + " and " + self.yellowLot[2].getName() + " will go through the Yellow Door.\n"
-            message += self.magentaLot[0].getName() + ", " + self.magentaLot[1].getName() + " and " + self.magentaLot[2].getName() + " will go through the Magenta Door.\n"
-        if(len(self.redLot) != 0):
-            message += self.redLot[0].getName() + ", " + self.redLot[1].getName() + " and " + self.redLot[2].getName() + " will go through the Red Door.\n"
-            message += self.greenLot[0].getName() + ", " + self.greenLot[1].getName() + " and " + self.greenLot[2].getName() + " will go through the Green Door.\n"
-            message += self.blueLot[0].getName() + ", " + self.blueLot[1].getName() + " and " + self.blueLot[2].getName() + " will go through the Blue Door.\n"
-        return message
-
-    def generateRoundVote(self,player):
-        personality = player.getPersonality()
-
-        if(personality == "Cooperator"):
-            return Vote.ALLY
-
-        elif(personality == "Undecided"):
-            if(random.random() > 0.5):
-                return Vote.ALLY
-            else:
-                return Vote.BETRAY
-
-        elif(personality == "Killer"):
-            opponentColor = self.getOpponent(player).split()[0]
-            opponentType = self.getOpponent(player).split()[1]
-            for opponent in self.PlayerArray:
-                if(opponent.getColor() == opponentColor and opponent.getType() == opponentType):
-                    if (opponent.getPoints() <= 2):
-                        return Vote.BETRAY
-            return Vote.ALLY
-
-        elif(personality == "Cockblocker"):
-            opponentColor = self.getOpponent(player).split()[0]
-            opponentType = self.getOpponent(player).split()[1]
-            for opponent in self.PlayerArray:
-                if(opponent.getColor() == opponentColor and opponent.getType() == opponentType):
-                    if (opponent.getPoints() >= 6):
-                        if(random.random() < 0.7):
-                            return Vote.BETRAY
-            return Vote.ALLY
-
-        elif(personality == "Asshole"):
-            return Vote.BETRAY
-
-        elif(personality == "Paranoid"):
-            if(self.GameIterations == 1 or player.getPoints() <= 2):
-                return Vote.BETRAY
-            else:
-                 if(random.random() > 0.6):
-                     return Vote.ALLY
-                 else:
-                     return Vote.BETRAY
 
 
 
@@ -491,6 +395,11 @@ class GameInstance:
         if(len(participatingPlayers) == 2):       #aka, if it's a pair vote
 
             opponents = self.getPlayerByTypecolor(self.getOpponent(participatingPlayers[0]))
+
+            if(len(opponents == 0)):
+                self.AmbidexGameRound[typecolor] = Vote.ALLY
+                return "ALLY"
+
             playerA = participatingPlayers[0]
             playerB = participatingPlayers[1]
 
@@ -523,10 +432,11 @@ class GameInstance:
                     
 
                     if((bToAState.consValuePrev + bToAState.consValue + bToCState.consValuePrev + bToCState.consValue) > playerB.privateState.decisionThreshold):   #P1 propoe ao P2 que ele faça ally
-                        return decideWithPressure(playerB,opponents[0],2*playerB.privateState.honorFactor,capValue,playerA,"ALLY",1,-2)       #the 2 represents the weight of the promise
+                        return decideWithPressure(playerB,opponents[0],2*playerB.privateState.honorFactor,capValue,playerA,"ALLY",1,-2,firstProposal)       #the 2 represents the weight of the promise
                     
-                    elif((aToBState.consValuePrev + aToBState.consValue + aToCState.consValuePrev + aToCState.consValue) < playerA.privateState.decisionThreshold):           #P2 propoe ao P1 que ele faça betray
-                        return decideWithPressure(playerA,opponents[0],-2*playerB.privateState.honorFactor,capValue,playerB,"BETRAY",1,-2)
+                    secondProposal = [playerB.name,playerA.name,"ALLY","ACTIVE"]
+                    if((aToBState.consValuePrev + aToBState.consValue + aToCState.consValuePrev + aToCState.consValue) < playerA.privateState.decisionThreshold):           #P2 propoe ao P1 que ele faça betray
+                        return decideWithPressure(playerA,opponents[0],-2*playerB.privateState.honorFactor,capValue,playerB,"BETRAY",1,-2,secondProposal)
 
                     else:
                         votingPlayer = self.chooseVotingPlayer(initialOpinion1,initialOpinion2,playerA,playerB,capValue)
@@ -540,19 +450,33 @@ class GameInstance:
 
         elif(len(participatingPlayers) == 1):
             opponents = self.getPlayerByTypecolor(self.getOpponent(participatingPlayers[0]))
+            currentProposal = 0
+            if(len(opponents) == 0):
+                self.AmbidexGameRound[typecolor] = Vote.ALLY
+                return "ALLY"
+            else:
+                for opp in opponents:
+                    opponentState = participatingPlayers[0].privateState.getOpponentState(opp.name)
+                    promiseToOpponent = self.checkPromise(opp.name,participatingPlayers[0].name,2)
+                    currentProposal += opponentState.consValue + opponentState.consValuePrev + 3*opponentState.nAlly - 3*opponentState.nBetray + promiseToOpponent
+                currentProposal /= len(opponents)
+
+                votingProbabilities = self.computeProbabilities(currentProposal,capValue,participatingPlayers[0].privateState.decisionThreshold)
+                choiceGenerated = random.random()
+                if(choiceGenerated < votingProbabilities[0]):
+                    self.AmbidexGameRound[typecolor] = Vote.ALLY
+                    return "ALLY"
+                else:
+                    self.AmbidexGameRound[typecolor] = Vote.BETRAY
+                    return "BETRAY"
             
-
-
-
 
 
         elif(len(participatingPlayers) == 0):
             self.AmbidexGameRound[typecolor] = Vote.ALLY
             return "ALLY"
                    
-                    
-                
-
+           
 
     def chooseVotingPlayer(self,proposal1,proposal2,player1,player2):
         distTotal = abs(proposal1 - player1.privateState.decisionThreshold) + abs(proposal2 - player2.privateState.decisionThreshold)
@@ -598,7 +522,7 @@ class GameInstance:
 
 
 
-    def decideWithPressure(self,player,opponent,negotiationWeight,capValue,partner,promisedToPartner,bonus,penalty):
+    def decideWithPressure(self,player,opponent,negotiationWeight,capValue,partner,promisedToPartner,bonus,penalty,promise):
         opponentState = player.privateState.getOpponentState(opponent.name)
         promiseToOpponent = self.checkPromise(opponent.name,player.name,2)
 
@@ -615,6 +539,8 @@ class GameInstance:
                 self.AmbidexGameRound[typecolor] = Vote.ALLY
                 partnerToPlayerState.consValue += bonus*partner.privateState.emotionalMultiplier
                 playerToPartnerState.consValuePrev += bonus
+                player.privateState.promiseHistory.append(promise)
+                partner.privateState.promiseHistory.append(promise)
                 return "ALLY"
             else:
                 self.AmbidexGameRound[typecolor] = Vote.BETRAY
@@ -635,6 +561,8 @@ class GameInstance:
                 self.AmbidexGameRound[typecolor] = Vote.BETRAY
                 partnerToPlayerState.consValue += bonus*partner.privateState.emotionalMultiplier
                 playerToPartnerState.consValuePrev += bonus
+                player.privateState.promiseHistory.append(promise)
+                partner.privateState.promiseHistory.append(promise)
                 return "BETRAY"
 
 
@@ -657,6 +585,14 @@ class GameInstance:
             #elif(promise[0] == opponentName and promise[1] == player.name and promise[2] == "ALLY" and promise[3] == "FAILED"):        possibilidade de fazer cenas com promessas n cumpridas
         return currentValue
 
+
+    def getPromise(self,receiver,proposer, player):
+        for promise in player.privateState.promiseHistory:
+            if(promise[0] == proposer and promise[1] == receiver and promise[2] == "ALLY" and promise[3] == "ACTIVE"):
+                return promise
+        return "NULL"
+
+
     def computeProbabilities(self,proposalValue,capValue,decisionThreshold):
         finalArray = [0,0]
         linearProbAlly = (((proposalValue-decisionThreshold)+(capValue-decisionThreshold))/((capValue-decisionThreshold)*2))
@@ -669,4 +605,118 @@ class GameInstance:
             finalArray[0] = 1 - finalArray[1]
         else:
             finalArray = [0.5,0.5]
-        return finalArray        
+        return finalArray
+
+
+
+    def computeAmbidexGame(self):
+
+        for player in self.PlayerArray:
+            playerColorType = self.getPlayerColorType(player)
+            opponentColorType = self.getOpponent(player)
+            value = self.getAmbidexResult(playerColorType,opponentColorType)
+            player.addPoints(value)
+            self.updateOpponentValues(playerColorType,opponentColorType,player,self.getPlayerByTypecolor(opponentColorType))
+            self.updateOutsiderValues(player)
+
+        self.GameIterations += 1
+        self.randomizeBracelets()
+        self.AmbidexGameRound.clear()
+
+
+
+    def updateOpponentValues(self,playerColorType,opponentColorType,player,opponents):
+        playerVote = self.AmbidexGameRound[playerColorType]
+        opponentVote = self.AmbidexGameRound[opponentColorType]
+
+        for opp in opponents:
+            opponentState = player.privateState.getOpponentState(opp.name)
+
+            playerPromise = self.getPromise(opp,player,player)        
+            opponentPromise = self.getPromise(player,opp,player)
+
+
+            if(opponentVote == Vote.ALLY):
+                if(opponentPromise != "NULL"):
+                    opponentPromise[3] = "SUCCESS"
+                    opponentState.consValue += 2*player.privateState.emotionalMultiplier        #bonus from holding up to his previous promise
+                opponentState.consValue += 1*player.privateState.emotionalMultiplier
+                opponentState.nAlly += 1
+
+            elif(opponentVote == Vote.BETRAY):
+                if(opponentPromise != "NULL"):
+                    opponentPromise[3] = "FAILURE"
+                    opponentState.consValue += -2*player.privateState.emotionalMultiplier        #penalty from not holding up to his previous promise
+                opponentState.consValue += -1*player.privateState.emotionalMultiplier
+                opponentState.nBetray += 1
+
+
+            if(playerVote == Vote.ALLY):
+                if(playerPromise != "NULL"):
+                    playerPromise[3] = "SUCCESS"
+                    opponentState.consValuePrev += 2
+                opponentState.consValuePrev += 2
+
+            elif(playerVote == Vote.BETRAY):
+                if(playerPromise != "NULL"):
+                    playerPromise[3] = "FAILURE"
+                    opponentState.consValuePrev += -2
+                opponentState.consValuePrev += -2
+
+
+    def updateOutsiderValues(self,outsider):
+        outsiderColorType = self.getPlayerColorType(outsider)
+        outsiderOpponentColorType = self.getOpponent(outsider)
+
+
+        outsiderVote = self.AmbidexGameRound[outsiderColorType]
+
+
+        for player in self.PlayerArray:
+            finalValue = 0
+            playerColorType = self.getPlayerColorType(player)
+            opponentColorType = self.getOpponent(player)
+            playerState = outsider.privateState.getOpponentState(player.name)
+
+            opponents = self.getPlayerByTypecolor(opponentColorType)
+            playerVote = self.AmbidexGameRound[playerColorType]
+
+            if(playerColorType != outsiderColorType and playerColorType != outsiderOpponentColorType):      
+    
+                #actualiza a opiniao do outsider em relaçao aos outros players
+
+                if(playerVote == Vote.ALLY):        
+                    if(len(opponents) > 0):
+                        for opp in opponents:
+                            opponentState = outsider.privateState.getOpponentState(opp.name)
+                            if(opponentState.consValue >= 0 and playerState.consValue != 0):
+                                finalValue += (opponentState.consValue/abs(playerState.consValue)) + 1
+                            elif(opponentState.consValue < 0 and playerState.consValue != 0):
+                                finalValue += (opponentState.consValue/abs(playerState.consValue)) - 1
+                            elif(opponentState.consValue != 0 and playerState.consValue == 0):
+                                finalValue += (opponentState.consValue/abs(opponentState.consValue))
+                            elif(opponentState.consValue == 0 and playerState.consValue == 0):
+                                finalValue += 1
+                        finalValue /= len(opponents)
+
+                elif(playerVote == Vote.BETRAY):
+                    if(len(opponents) > 0):
+                        for opp in opponents:
+                            opponentState = outsider.privateState.getOpponentState(opp.name)
+                            if(opponentState.consValue > 0):
+                                finalValue += (abs(playerState.consValue)/(-1*opponentState.consValue)) - 1
+                            elif(opponentState.consValue < 0):
+                                finalValue += (abs(playerState.consValue)/(-1*opponentState.consValue)) + 1
+                            elif(opponentState.consValue == 0):
+                                finalValue += -1
+
+                playerState.consValue += finalValue
+
+                #actualiza a opiniao que o outsider acha que os outros têm dele, como outsiders
+
+                if(outsiderVote == Vote.ALLY):
+                    playerState.consValuePrev += 1
+
+                elif(outsiderVote == Vote.BETRAY):
+                    playerState.consValuePrev -= 1
+        

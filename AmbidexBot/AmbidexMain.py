@@ -42,16 +42,14 @@ def main():
         chosenCombination = game.calcVoting()           #calculates which door is chosen for the round
         game.setPlayerDoors(chosenCombination)          #locks the players to the respective door according to the chosen combination
 
-        for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
-            voteString = game.computeVote(typecolor,20)              #20 is the maximum cap value for which Ally probability is 100%
-        
+        if(game.GameIterations%2 != 0):
+            for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
+                voteString = game.computeVote(typecolor,20)              #20 is the maximum cap value for which Ally probability is 100%
+        else:
+            for typecolor in ["CYAN PAIR","CYAN SOLO","MAGENTA PAIR","MAGENTA SOLO","YELLOW PAIR","YELLOW SOLO"]:
+                voteString = game.computeVote(typecolor,20)
 
-        #calcular a utilidade para cada player de acordo com os consideration values e retornar combinacao escolhida "por todos"
-        #game.setPlayerDoors(combi) // combi returnada na linha anterior
-        game.LockAmbidex=True
-        game.AmbidexInProgress=True
-        #negotiation between pairs, solo vote is linear 
-        
+        game.computeAmbidexGame()
         
         
         #at end game write to log:

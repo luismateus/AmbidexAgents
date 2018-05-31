@@ -592,16 +592,6 @@ async def checkAmbidexGame(ctx):
     if(game.AmbidexInProgress):
         colors = []
         playerIndex = {}
-        for player in game.PlayerArray:
-            if(player.getSpecies() == Species.MACHINE):
-                if(player.getStatus() == Status.ALIVE):
-                    botcolortype = game.getPlayerColorType(player)
-                    if(botcolortype not in game.AmbidexGameRound):
-                        game.AmbidexGameRound[botcolortype] = game.generateRoundVote(player);
-        for colortype in game.ColorSets[game.ProposedColorCombo].keys():
-            if(colortype not in game.AmbidexGameRound):
-                game.AmbidexGameRound[colortype] = Vote.ALLY
-        messageArray = await setResultsArray();
         playerCounter = 1;
 
         if(game.GameIterations%2 != 0):
