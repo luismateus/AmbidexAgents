@@ -31,6 +31,7 @@ class GameInstance:
         self.CurrentVotes["b"] = []
         self.CurrentVotes["c"] = []
         self.AmbidexGameRound = {}
+        self.preferenceDict = {}
         self.cyanLot = []
         self.yellowLot = []
         self.magentaLot = []
@@ -311,7 +312,7 @@ class GameInstance:
 
     def calcVoting(self):
 
-        preferenceDict = {}
+        self.preferenceDict = {}
 
         utilityArray = [0,0,0]
 
@@ -350,11 +351,11 @@ class GameInstance:
                     preferenceArray[i] = combiValue
                     utilityArray[i] += combiValue
 
-            preferenceDict[player.name] = preferenceArray
+            self.preferenceDict[player.name] = preferenceArray
 
-        for key in preferenceDict.keys():
-            voteArray[preferenceDict[key].index(max(preferenceDict[key]))] += 1;
-            leastSufferingArray.[preferenceDict[key].index(min(preferenceDict[key]))] += min(preferenceDict[key])
+        for key in self.preferenceDict.keys():
+            voteArray[self.preferenceDict[key].index(max(self.preferenceDict[key]))] += 1;
+            leastSufferingArray[self.preferenceDict[key].index(min(self.preferenceDict[key]))] += min(self.preferenceDict[key])
 
         maxVoteValue = max(voteArray)
         drawCheck = 0
@@ -584,6 +585,28 @@ class GameInstance:
                 return promiseValue
             #elif(promise[0] == opponentName and promise[1] == player.name and promise[2] == "ALLY" and promise[3] == "FAILED"):        possibilidade de fazer cenas com promessas n cumpridas
         return currentValue
+            
+            
+
+    def willingToLeave(self, player1):
+        goodGuys=0
+        badGuys=0
+        for player in self.PlayerArray:
+            if(not player.getName() == player1.getName()):
+                opponentState = player1.privateState.getOpponetState(player.getName())
+                if((opponentState.consValue + opponentState.consValuePrev >= 7) and player.getPoints()>=5 and player.getPoints()<9):
+                    goodGuys+=1
+                elif((opponentState.consValue + opponentState.consValuePrev < -1) and player.getPoints()<9):
+                    badGuys+=1
+        if(goodGuys>badGuys):
+            return False
+        else:
+            return True
+                    
+                
+                
+    
+
 
 
     def getPromise(self,receiver,proposer, player):
@@ -719,4 +742,3 @@ class GameInstance:
 
                 elif(outsiderVote == Vote.BETRAY):
                     playerState.consValuePrev -= 1
-        
