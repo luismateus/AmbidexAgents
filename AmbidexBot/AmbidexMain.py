@@ -27,25 +27,45 @@ def main():
             state_ = ET.SubElement(player_, "State") # definir subStates
             for opponent in player.privateState.opponentStateArray:
                 opState_ = ET.SubElement(state_, "Opponent", name=opponent.opponentName)
-                ET.SubElement(opState_,"ConsiderationValue").text = str(opponent.considerationValue)
-                ET.SubElement(opState_,"ConsiderationValuePrev").text = str(opponent.considerationValuePrev)
+                ET.SubElement(opState_,"ConsiderationValue").text = str(opponent.consValue)
+                ET.SubElement(opState_,"ConsiderationValuePrev").text = str(opponent.consValuePrev)
                 ET.SubElement(opState_,"AllyCounter").text = str(opponent.allyCounter)
                 ET.SubElement(opState_,"BetrayCounter").text = str(opponent.betrayCounter)                   
         combiA = game.combinations["a"]
         combiB = game.combinations["b"]
         combiC = game.combinations["c"]
-        combinations_ =ET.SubElement(round_,"Combinations")
-        ET.SubElement(combinations_,"CombinationA")
-
-        #HERE : put combinations in log
+        combinationsL_ = ET.SubElement(round_,"CombinationLots")
+        combA_ = ET.SubElement(combinationsL_,"CombinationA")
+        for i in range(0,3):
+            lot_ = ET.SubElement(combA_,"Lot"+str(i+1))
+            ET.SubElement(lot_,combiA[i][0].getName())
+            ET.SubElement(lot_,combiA[i][1].getName())
+            ET.SubElement(lot_,combiA[i][2].getName())
+        combB_ = ET.SubElement(combinationsL_,"CombinationB")
+        for i in range(0,3):
+            lot_ = ET.SubElement(combB_,"Lot"+str(i+1))
+            ET.SubElement(lot_,combiB[i][0].getName())
+            ET.SubElement(lot_,combiB[i][1].getName())
+            ET.SubElement(lot_,combiB[i][2].getName())
+        combC_ = ET.SubElement(combinationsL_,"CombinationC")
+        for i in range(0,3):
+            lot_ = ET.SubElement(combC_,"Lot"+str(i+1))
+            ET.SubElement(lot_,combiC[i][0].getName())
+            ET.SubElement(lot_,combiC[i][1].getName())
+            ET.SubElement(lot_,combiC[i][2].getName())
+        combinations_ = ET.SubElement(round_,"Combinations")
+        for player in playerArray:
+            player_ = ET.SubElement(combinations_,player.getName())
+            preferenceArray = game.preferenceDict[player.getName()]
+            ET.SubElement(player_,"A").text =  str(preferenceArray[0])
+            ET.SubElement(player_,"B").text =  str(preferenceArray[1])
+            ET.SubElement(player_,"C").text =  str(preferenceArray[2])
+             
         chosenCombination = game.calcVoting()
-        #calcular a utilidade para cada player de acordo com os consideration values e retornar combinacao escolhida "por todos"
-        #game.setPlayerDoors(combi) // combi returnada na linha anterior
+        chosenComb_ = ET.SubElement(round_, "ChosenCombination").text = chosenCombination
         game.LockAmbidex=True
         game.AmbidexInProgress=True
         #negotiation between pairs, solo vote is linear 
-        
-        
         
         #at end game write to log:
         tree_ = ET.ElementTree(game_)
