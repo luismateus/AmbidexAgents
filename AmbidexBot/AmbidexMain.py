@@ -1,7 +1,5 @@
 from GameInstance import GameInstance
 from Player import Player
-import Token
-from Species import Species
 from Type import Type
 from Vote import Vote
 from Status import Status
@@ -16,7 +14,7 @@ def main():
     while(not game.doorNineOpen):
         #bots recebem as combinacoes e teem de votar numa. HOW? criar array de consideracoes para cada player
         game.clearCombi()
-        round_ = ET.SubElement(_game, "Round")
+        round_ = ET.SubElement(game_, "Round")
         players_ = ET.SubElement(round_, "Players")
         for player in playerArray:
             game.setPlayerCombi(player)
@@ -28,15 +26,15 @@ def main():
             promises_=ET.SubElement(state_,"PromiseHistory")
             for promise in player.privateState.promiseHistory:
                 ET.SubElement(promises_,"Promise").text = promise[1] +" "+ promise[2] +" to "+ promise[0] + ". Status: " + promise[3]
-            ET.SubElement(promises_,"DecisionThreshold").text = str(player.privateState.decisionThreshold)
-            ET.SubElement(promises_,"EmotionalMultiplier").text = str(player.privateState.emotionalMultiplier)
-            ET.SubElement(promises_,"HonorFactor").text = str(player.privateState.honorFactor)
+            ET.SubElement(state_,"DecisionThreshold").text = str(player.privateState.decisionThreshold)
+            ET.SubElement(state_,"EmotionalMultiplier").text = str(player.privateState.emotionalMultiplier)
+            ET.SubElement(state_,"HonorFactor").text = str(player.privateState.honorFactor)
             for opponent in player.privateState.opponentStateArray:
                 opState_ = ET.SubElement(state_, "Opponent", name=opponent.opponentName)
                 ET.SubElement(opState_,"ConsiderationValue").text = str(opponent.consValue)
                 ET.SubElement(opState_,"ConsiderationValuePrev").text = str(opponent.consValuePrev)
-                ET.SubElement(opState_,"AllyCounter").text = str(opponent.allyCounter)
-                ET.SubElement(opState_,"BetrayCounter").text = str(opponent.betrayCounter)                   
+                ET.SubElement(opState_,"AllyCounter").text = str(opponent.nAlly)
+                ET.SubElement(opState_,"BetrayCounter").text = str(opponent.nBetray)                   
         combiA = game.combinations["a"]
         combiB = game.combinations["b"]
         combiC = game.combinations["c"]
@@ -60,6 +58,9 @@ def main():
             ET.SubElement(lot_,combiC[i][1].getName())
             ET.SubElement(lot_,combiC[i][2].getName())
         combinations_ = ET.SubElement(round_,"Combinations")
+
+        chosenCombination = game.calcVoting()           #calculates which door is chosen for the round
+
         for player in playerArray:
             player_ = ET.SubElement(combinations_,player.getName())
             preferenceArray = game.preferenceDict[player.getName()]
@@ -67,7 +68,6 @@ def main():
             ET.SubElement(player_,"B").text =  str(preferenceArray[1])
             ET.SubElement(player_,"C").text =  str(preferenceArray[2])
              
-        chosenCombination = game.calcVoting()           #calculates which door is chosen for the round
         chosenComb_ = ET.SubElement(round_, "ChosenCombination").text = chosenCombination
         game.setPlayerDoors(chosenCombination)          #locks the players to the respective door according to the chosen combination
         vote_ = ET.SubElement(round_, "Vote")
@@ -80,24 +80,26 @@ def main():
             for typecolor in ["CYAN PAIR","CYAN SOLO","MAGENTA PAIR","MAGENTA SOLO","YELLOW PAIR","YELLOW SOLO"]:
                 voteString = game.computeVote(typecolor,20)
                 voteDict[typecolor]=voteString
-                
+
                 
         if(game.GameIterations%2 != 0):
             for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
-                type_= ET.SubElement(vote_,"Type", name =typecolor).text = voteDict[typecolor]
+                type_= ET.SubElement(vote_,"Type", name =typecolor)
+                type_.text = voteDict[typecolor]
                 arrayType = game.getPlayerByTypecolor(typecolor)
                 if(len(arrayType)>0):
                     p1 = arrayType[0]
                     opponent = game.getOpponent(p1)
-                    ET.SubElement(type_,"Opponent", name=opponent.getColor()).text = voteDict[opponent.getColor()]
+                    ET.SubElement(type_,"Opponent", name=opponent).text = voteDict[opponent]
         else:
             for typecolor in ["CYAN PAIR","CYAN SOLO","MAGENTA PAIR","MAGENTA SOLO","YELLOW PAIR","YELLOW SOLO"]:  
-                type_= ET.SubElement(vote_,"Type", name =typecolor).text = voteDict[typecolor]
+                type_= ET.SubElement(vote_,"Type", name =typecolor)
+                type_.text = voteDict[typecolor]
                 arrayType = game.getPlayerByTypecolor(typecolor)
                 if(len(arrayType)>0):
                     p1 = arrayType[0]
                     opponent = game.getOpponent(p1)
-                    ET.SubElement(type_,"Opponent", name=opponent.getColor()).text = voteDict[opponent.getColor()]                
+                    ET.SubElement(type_,"Opponent", name=opponent).text = voteDict[opponent]                
         
         game.computeAmbidexGame()
         
@@ -111,9 +113,9 @@ def main():
         
         #at end game write to log:
         tree_ = ET.ElementTree(game_)
-        tree.write("log.xml")
+        tree_.write("log.xml")
             
             
-
+main()
 
 

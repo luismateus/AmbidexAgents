@@ -14,14 +14,12 @@ from OpponentState import OpponentState
 
 class GameInstance:
     
-    def __init__(self,server):
+    def __init__(self):
 
         self.doorNineOpen = False
-        self.server = server
         self.PlayerArray = []
         self.GameStarted = False
         self.ColorSets = {}
-        self.InitializeColorSets()
         self.GameIterations = 0
         self.CurrentColorSet = []
         self.CurrentDoorSet = []
@@ -42,6 +40,7 @@ class GameInstance:
         self.lookupCombi = {"RED SOLO": (0,1,2), "RED PAIR": (0,2,1), "GREEN SOLO": (1,2,0), "GREEN PAIR":(1,0,2), "BLUE SOLO": (2,0,1), "BLUE PAIR": (2,1,0),"CYAN SOLO": (0,1,2), "CYAN PAIR": (0,2,1), "MAGENTA SOLO": (1,2,0), "MAGENTA PAIR":(1,0,2), "YELLOW SOLO": (2,0,1), "YELLOW PAIR": (2,1,0)}
         self.combinations = {"a": [[],[],[]], "b": [[],[],[]], "c": [[],[],[]]}
         self.playerObjectives = {}
+        self.InitializeColors()
 
 
 
@@ -62,13 +61,12 @@ class GameInstance:
         for name in nameArray:
             player = Player(name)
             self.PlayerArray.append(player)
-            i=0
-            for opponent in player.privateState.opponentStateArray:
-                if(player.getName() != nameArray[i]):
-                    opponent.opponentName = nameArray[i]
-                i+=1
+            opponentNames = nameArray.copy()
+            opponentNames.remove(name)
+            for i in range(len(player.privateState.opponentStateArray)):
+                player.privateState.opponentStateArray[i].opponentName = opponentNames[i]
         print("A new game was created.")
-        return PlayerArray;
+        return self.PlayerArray;
 
 
     def endGame(self):
@@ -265,10 +263,16 @@ class GameInstance:
         colorType = self.getPlayerColorType(player)
         playerCombi = self.lookupCombi[colorType]
         playerLots = [list(self.combinations["a"]),list(self.combinations["b"]),list(self.combinations["c"])]
-        print(playerLots)
-        playerLots[0][playerCombi[0]].append(player)
-        playerLots[1][playerCombi[1]].append(player)
-        playerLots[2][playerCombi[2]].append(player)
+        if(player.getType() == Type.SOLO):
+            playerLots[0][playerCombi[0]].append(player)
+            playerLots[1][playerCombi[1]].append(player)
+            playerLots[2][playerCombi[2]].append(player)
+        else:
+            playerLots[0][playerCombi[0]].insert(0,player)
+            playerLots[1][playerCombi[1]].insert(0,player)
+            playerLots[2][playerCombi[2]].insert(0,player)
+            
+
         self.combinations["a"] = playerLots[0]
         self.combinations["b"] = playerLots[1]
         self.combinations["c"] = playerLots[2]
@@ -342,23 +346,24 @@ class GameInstance:
             preferenceArray = [0,0,0]
 
             for i in range(3):
-                doorArray = findCombiWithPlayer(combi[i],player)
+                doorArray = self.findCombiWithPlayer(combi[i],player)
 
                 if(player.type == Type.PAIR):
                     opponentName = doorArray[2].name
                     opponentState = player.privateState.getOpponentState(opponentName)
-                    combiValue = opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + checkPromise(player.name,opponentName,2)
+                    combiValue = opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + self.checkPromise(player,opponentName,2)
                     preferenceArray[i] = combiValue
                     utilityArray[i] += combiValue
 
                 elif(player.type == Type.SOLO):
                     opponentName = doorArray[0].name
                     opponentState = player.privateState.getOpponentState(opponentName)
-                    combiValue = opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + checkPromise(player.name,opponentName,2)
+
+                    combiValue = opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + self.checkPromise(player,opponentName,2)
 
                     opponentName = doorArray[1].name
                     opponentState = player.privateState.getOpponentState(opponentName)
-                    combiValue += opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + checkPromise(player.name,opponentName,2)
+                    combiValue += opponentState.consValue + opponentState.consValuePrev + 4*opponentState.nAlly - 4*opponentState.nBetray + self.checkPromise(player,opponentName,2)
 
                     combiValue /= 2
 
@@ -407,11 +412,12 @@ class GameInstance:
 
     def computeVote(self,typecolor,capValue):                                   #CASO EM QUE ELES MORREM É COBERTO PELO GETPLAYERBYTYPECOLOR
         participatingPlayers = self.getPlayerByTypecolor(typecolor)
+
         if(len(participatingPlayers) == 2):       #aka, if it's a pair vote
 
             opponents = self.getPlayerByTypecolor(self.getOpponent(participatingPlayers[0]))
 
-            if(len(opponents == 0)):
+            if(len(opponents) == 0):
                 self.AmbidexGameRound[typecolor] = Vote.ALLY
                 return "ALLY"
 
@@ -422,44 +428,47 @@ class GameInstance:
             bToAState = playerB.privateState.getOpponentState(playerA.name)
 
             aToCState = playerA.privateState.getOpponentState(opponents[0].name)
-            promiseToOpponent = self.checkPromise(opponents[0].name,playerA.name,2)
+            promiseToOpponent = self.checkPromise(opponents[0],playerA.name,2)
             initialOpinion1 = aToCState.consValue + aToCState.consValuePrev + 3*aToCState.nAlly - 3*aToCState.nBetray + promiseToOpponent
 
             bToCState = playerB.privateState.getOpponentState(opponents[0].name)
-            promiseToOpponent = self.checkPromise(opponents[0].name,playerB.name,2)
+            promiseToOpponent = self.checkPromise(opponents[0],playerB.name,2)
             initialOpinion2 = bToCState.consValue + bToCState.consValuePrev + 3*bToCState.nAlly - 3*bToCState.nBetray + promiseToOpponent
 
-            if(initialOpinion1 > playerA.privateState.decisionThreshold == initialOpinion2 > playerB.privateState.decisionThreshold):  #they both want to ally or both want to betray
+
+            if((initialOpinion1 > playerA.privateState.decisionThreshold) == (initialOpinion2 > playerB.privateState.decisionThreshold)):  #they both want to ally or both want to betray
                 votingPlayer = random.randrange(2)    #they choose randomly between themselves, since there's no conflict
                 if(votingPlayer == 0):
-                    self.votingAuxNoPromises(initialOpinion1,initialOpinion2,capValue,playerA,playerB,1,-2,typecolor)
+                    return self.votingAuxNoPromises(initialOpinion1,initialOpinion2,capValue,playerA,playerB,1,-2,typecolor)
 
 
                 elif(votingPlayer == 1):
-                    self.votingAuxNoPromises(initialOpinion2,initialOpinion1,capValue,playerB,playerA,1,-2,typecolor)
+                    return self.votingAuxNoPromises(initialOpinion2,initialOpinion1,capValue,playerB,playerA,1,-2,typecolor)
 
 
             else:       #NEGOTIATION PART
-                if(initialOpinion1 > playerA.privateState.decisionThreshold and initialOpinion2 < playerB.privateState.decisionThreshold):  #P1 ALLY, P2 BETRAY
+                if(initialOpinion1 >= playerA.privateState.decisionThreshold and initialOpinion2 < playerB.privateState.decisionThreshold):  #P1 ALLY, P2 BETRAY
                     player1InitialVote = "ALLY"
                     player2InitialVote = "BETRAY"
                     firstProposal = [playerA.name,playerB.name,"ALLY","ACTIVE"]
                     
-
                     if((bToAState.consValuePrev + bToAState.consValue + bToCState.consValuePrev + bToCState.consValue) > playerB.privateState.decisionThreshold):   #P1 propoe ao P2 que ele faça ally
-                        return decideWithPressure(playerB,opponents[0],2*playerB.privateState.honorFactor,capValue,playerA,"ALLY",1,-2,firstProposal)       #the 2 represents the weight of the promise
+                        print("P2 accepted")
+                        return self.decideWithPressure(playerB,opponents[0],2*playerB.privateState.honorFactor,capValue,playerA,"ALLY",1,-2,firstProposal,typecolor)       #the 2 represents the weight of the promise
                     
                     secondProposal = [playerB.name,playerA.name,"ALLY","ACTIVE"]
                     if((aToBState.consValuePrev + aToBState.consValue + aToCState.consValuePrev + aToCState.consValue) < playerA.privateState.decisionThreshold):           #P2 propoe ao P1 que ele faça betray
-                        return decideWithPressure(playerA,opponents[0],-2*playerB.privateState.honorFactor,capValue,playerB,"BETRAY",1,-2,secondProposal)
-
+                        print("P1 accepted")
+                        return self.decideWithPressure(playerA,opponents[0],-2*playerB.privateState.honorFactor,capValue,playerB,"BETRAY",1,-2,secondProposal,typecolor)
+                    
                     else:
-                        votingPlayer = self.chooseVotingPlayer(initialOpinion1,initialOpinion2,playerA,playerB,capValue)
+                        print("no agreement")
+                        votingPlayer = self.chooseVotingPlayer(initialOpinion1,initialOpinion2,playerA,playerB)
                         if(votingPlayer == 0):
-                            self.votingAuxNoPromises(initialOpinion1,initialOpinion2,capValue,playerA,playerB,1,-1,typecolor)
+                            return self.votingAuxNoPromises(initialOpinion1,initialOpinion2,capValue,playerA,playerB,1,-1,typecolor)
 
                         elif(votingPlayer == 1):
-                            self.votingAuxNoPromises(initialOpinion2,initialOpinion1,capValue,playerB,playerA,1,-1,typecolor)
+                            return self.votingAuxNoPromises(initialOpinion2,initialOpinion1,capValue,playerB,playerA,1,-1,typecolor)
 
 
 
@@ -472,7 +481,7 @@ class GameInstance:
             else:
                 for opp in opponents:
                     opponentState = participatingPlayers[0].privateState.getOpponentState(opp.name)
-                    promiseToOpponent = self.checkPromise(opp.name,participatingPlayers[0].name,2)
+                    promiseToOpponent = self.checkPromise(opp,participatingPlayers[0].name,2)
                     currentProposal += opponentState.consValue + opponentState.consValuePrev + 3*opponentState.nAlly - 3*opponentState.nBetray + promiseToOpponent
                 currentProposal /= len(opponents)
 
@@ -537,9 +546,9 @@ class GameInstance:
 
 
 
-    def decideWithPressure(self,player,opponent,negotiationWeight,capValue,partner,promisedToPartner,bonus,penalty,promise):
+    def decideWithPressure(self,player,opponent,negotiationWeight,capValue,partner,promisedToPartner,bonus,penalty,promise,typecolor):
         opponentState = player.privateState.getOpponentState(opponent.name)
-        promiseToOpponent = self.checkPromise(opponent.name,player.name,2)
+        promiseToOpponent = self.checkPromise(opponent,player.name,2)
 
         partnerToPlayerState = partner.privateState.getOpponentState(player.name)
         playerToPartnerState = player.privateState.getOpponentState(partner.name)
@@ -588,14 +597,14 @@ class GameInstance:
         combi = self.combinations[combiName]
         for lot in combi:
             for i in range(len(lot)):
-                if player.name == lot[i]:
+                if player.name == lot[i].name:
                     return lot
 
 
     def checkPromise(self,receiver,proposer,promiseValue):
         currentValue = 0
-        for promise in player.privateState.promiseHistory:
-            if(promise[0] == proposer and promise[1] == receiver and promise[2] == "ALLY" and promise[3] == "ACTIVE"):
+        for promise in receiver.privateState.promiseHistory:
+            if(promise[0] == proposer and promise[1] == receiver.name and promise[2] == "ALLY" and promise[3] == "ACTIVE"):
                 return promiseValue
             #elif(promise[0] == opponentName and promise[1] == player.name and promise[2] == "ALLY" and promise[3] == "FAILED"):        possibilidade de fazer cenas com promessas n cumpridas
         return currentValue
@@ -607,7 +616,7 @@ class GameInstance:
         badGuys=0
         for player in self.PlayerArray:
             if(not player.getName() == player1.getName()):
-                opponentState = player1.privateState.getOpponetState(player.getName())
+                opponentState = player1.privateState.getOpponentState(player.getName())
                 if((opponentState.consValue + opponentState.consValuePrev >= 7) and player.getPoints()>=5 and player.getPoints()<9):
                     goodGuys+=1
                 elif((opponentState.consValue + opponentState.consValuePrev < -1) and player.getPoints()<9):
@@ -653,6 +662,9 @@ class GameInstance:
             opponentColorType = self.getOpponent(player)
             value = self.getAmbidexResult(playerColorType,opponentColorType)
             player.addPoints(value)
+            print(playerColorType)
+            print(opponentColorType)
+            print("----------")
             self.updateOpponentValues(playerColorType,opponentColorType,player,self.getPlayerByTypecolor(opponentColorType))
             self.updateOutsiderValues(player)
 
