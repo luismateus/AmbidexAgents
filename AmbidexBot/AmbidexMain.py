@@ -4,11 +4,13 @@ from Type import Type
 from Vote import Vote
 from Status import Status
 import xml.etree.cElementTree as ET
+import datetime
+import time
 
 def main():
     game = GameInstance()
     playerArray = game.createGame()
-    game_ = ET.Element("Game")
+    game_ = ET.SubElement(timeline_,"Game")
     game.startGame()        #randomizes the bracelets
     startEndGame = False
 
@@ -145,10 +147,12 @@ def main():
 
         
         #at end game write to log:
-        tree_ = ET.ElementTree(game_)
-        tree_.write("log.xml")
-            
-            
-main()
-
+       
+timeline_ = ET.Element("Timeline")           
+for i in range(50):            
+    main()
+tree_ = ET.ElementTree(timeline_)
+ts = time.time()
+st = datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d_%H%M%S')
+tree_.write("log_" + st+".xml")
 
