@@ -10,12 +10,16 @@ def main():
     playerArray = game.createGame()
     game_ = ET.Element("Game")
     game.startGame()        #randomizes the bracelets
+    startEndGame = False
 
     while(not game.doorNineOpen):
         #bots recebem as combinacoes e teem de votar numa. HOW? criar array de consideracoes para cada player
         game.clearCombi()
         round_ = ET.SubElement(game_, "Round")
         players_ = ET.SubElement(round_, "Players")
+        
+                 
+               
         for player in playerArray:
             game.setPlayerCombi(player)
             
@@ -34,7 +38,9 @@ def main():
                 ET.SubElement(opState_,"ConsiderationValue").text = str(opponent.consValue)
                 ET.SubElement(opState_,"ConsiderationValuePrev").text = str(opponent.consValuePrev)
                 ET.SubElement(opState_,"AllyCounter").text = str(opponent.nAlly)
-                ET.SubElement(opState_,"BetrayCounter").text = str(opponent.nBetray)                   
+                ET.SubElement(opState_,"BetrayCounter").text = str(opponent.nBetray)  
+                       
+                    
         combiA = game.combinations["a"]
         combiB = game.combinations["b"]
         combiC = game.combinations["c"]
@@ -42,21 +48,21 @@ def main():
         combA_ = ET.SubElement(combinationsL_,"CombinationA")
         for i in range(0,3):
             lot_ = ET.SubElement(combA_,"Lot"+str(i+1))
-            ET.SubElement(lot_,combiA[i][0].getName())
-            ET.SubElement(lot_,combiA[i][1].getName())
-            ET.SubElement(lot_,combiA[i][2].getName())
+            ET.SubElement(lot_,"Player", name = combiA[i][0].getName())
+            ET.SubElement(lot_,"Player", name =combiA[i][1].getName())
+            ET.SubElement(lot_,"Player", name =combiA[i][2].getName())
         combB_ = ET.SubElement(combinationsL_,"CombinationB")
         for i in range(0,3):
             lot_ = ET.SubElement(combB_,"Lot"+str(i+1))
-            ET.SubElement(lot_,combiB[i][0].getName())
-            ET.SubElement(lot_,combiB[i][1].getName())
-            ET.SubElement(lot_,combiB[i][2].getName())
+            ET.SubElement(lot_,"Player", name =combiB[i][0].getName())
+            ET.SubElement(lot_,"Player", name =combiB[i][1].getName())
+            ET.SubElement(lot_,"Player", name =combiB[i][2].getName())
         combC_ = ET.SubElement(combinationsL_,"CombinationC")
         for i in range(0,3):
             lot_ = ET.SubElement(combC_,"Lot"+str(i+1))
-            ET.SubElement(lot_,combiC[i][0].getName())
-            ET.SubElement(lot_,combiC[i][1].getName())
-            ET.SubElement(lot_,combiC[i][2].getName())
+            ET.SubElement(lot_,"Player", name =combiC[i][0].getName())
+            ET.SubElement(lot_,"Player", name =combiC[i][1].getName())
+            ET.SubElement(lot_,"Player", name =combiC[i][2].getName())
         combinations_ = ET.SubElement(round_,"Combinations")
 
         chosenCombination = game.calcVoting()           #calculates which door is chosen for the round
@@ -107,9 +113,34 @@ def main():
             if (player.getPoints()>=9):
                 if(game.willingToLeave(player)):
                     print(game.getWinners())
-                    game.doorNineOpen=True
+                    startEndGame = True
                     break
-       
+        
+        
+        if(startEndGame):
+            ET.SubElement(game_, "Winners").text = game.getWinners()
+            final_ = ET.SubElement(game_, "FinalState")
+            for player in playerArray:
+                player_ = ET.SubElement(final_, "Player", name= player.getName())
+                ET.SubElement(player_, "Points").text = str(player.getPoints()) 
+                ET.SubElement(player_, "Type").text = str(player.getType())
+                state_ = ET.SubElement(player_, "State") # definir subStates
+                promises_=ET.SubElement(state_,"PromiseHistory")
+                for promise in player.privateState.promiseHistory:
+                    ET.SubElement(promises_,"Promise").text = promise[1] +" "+ promise[2] +" to "+ promise[0] + ". Status: " + promise[3]
+                ET.SubElement(state_,"DecisionThreshold").text = str(player.privateState.decisionThreshold)
+                ET.SubElement(state_,"EmotionalMultiplier").text = str(player.privateState.emotionalMultiplier)
+                ET.SubElement(state_,"HonorFactor").text = str(player.privateState.honorFactor)
+                for opponent in player.privateState.opponentStateArray:
+                    opState_ = ET.SubElement(state_, "Opponent", name=opponent.opponentName)
+                    ET.SubElement(opState_,"ConsiderationValue").text = str(opponent.consValue)
+                    ET.SubElement(opState_,"ConsiderationValuePrev").text = str(opponent.consValuePrev)
+                    ET.SubElement(opState_,"AllyCounter").text = str(opponent.nAlly)
+                    ET.SubElement(opState_,"BetrayCounter").text = str(opponent.nBetray)
+            game.doorNineOpen=True
+        
+  
+
         
         #at end game write to log:
         tree_ = ET.ElementTree(game_)

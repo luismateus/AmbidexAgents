@@ -7,7 +7,6 @@ import random
 from Type import Type
 from Status import Status
 from Vote import Vote
-from tabulate import tabulate
 from operator import itemgetter
 from PrivateState import PrivateState
 from OpponentState import OpponentState
