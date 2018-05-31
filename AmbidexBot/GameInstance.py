@@ -411,11 +411,10 @@ class GameInstance:
 
     def computeVote(self,typecolor,capValue):                                   #CASO EM QUE ELES MORREM É COBERTO PELO GETPLAYERBYTYPECOLOR
         participatingPlayers = self.getPlayerByTypecolor(typecolor)
-
         if(len(participatingPlayers) == 2):       #aka, if it's a pair vote
 
             opponents = self.getPlayerByTypecolor(self.getOpponent(participatingPlayers[0]))
-
+            
             if(len(opponents) == 0):
                 self.AmbidexGameRound[typecolor] = Vote.ALLY
                 return "ALLY"
@@ -435,7 +434,7 @@ class GameInstance:
             initialOpinion2 = bToCState.consValue + bToCState.consValuePrev + 3*bToCState.nAlly - 3*bToCState.nBetray + promiseToOpponent
 
 
-            if((initialOpinion1 > playerA.privateState.decisionThreshold) == (initialOpinion2 > playerB.privateState.decisionThreshold)):  #they both want to ally or both want to betray
+            if((initialOpinion1 >= playerA.privateState.decisionThreshold) == (initialOpinion2 >= playerB.privateState.decisionThreshold)):  #they both want to ally or both want to betray
                 votingPlayer = random.randrange(2)    #they choose randomly between themselves, since there's no conflict
                 if(votingPlayer == 0):
                     return self.votingAuxNoPromises(initialOpinion1,initialOpinion2,capValue,playerA,playerB,1,-2,typecolor)
@@ -456,9 +455,33 @@ class GameInstance:
                         return self.decideWithPressure(playerB,opponents[0],2*playerB.privateState.honorFactor,capValue,playerA,"ALLY",1,-2,firstProposal,typecolor)       #the 2 represents the weight of the promise
                     
                     secondProposal = [playerB.name,playerA.name,"ALLY","ACTIVE"]
-                    if((aToBState.consValuePrev + aToBState.consValue + aToCState.consValuePrev + aToCState.consValue) < playerA.privateState.decisionThreshold):           #P2 propoe ao P1 que ele faça betray
+                    if((aToBState.consValuePrev + aToBState.consValue - (aToCState.consValuePrev + aToCState.consValue)) > playerA.privateState.decisionThreshold):           #P2 propoe ao P1 que ele faça betray
                         print("P1 accepted")
-                        return self.decideWithPressure(playerA,opponents[0],-2*playerB.privateState.honorFactor,capValue,playerB,"BETRAY",1,-2,secondProposal,typecolor)
+                        return self.decideWithPressure(playerA,opponents[0],-2*playerA.privateState.honorFactor,capValue,playerB,"BETRAY",1,-2,secondProposal,typecolor)
+                    
+                    else:
+                        print("no agreement")
+                        votingPlayer = self.chooseVotingPlayer(initialOpinion1,initialOpinion2,playerA,playerB)
+                        if(votingPlayer == 0):
+                            return self.votingAuxNoPromises(initialOpinion1,initialOpinion2,capValue,playerA,playerB,1,-1,typecolor)
+
+                        elif(votingPlayer == 1):
+                            return self.votingAuxNoPromises(initialOpinion2,initialOpinion1,capValue,playerB,playerA,1,-1,typecolor)
+
+
+                elif(initialOpinion1 < playerA.privateState.decisionThreshold and initialOpinion2 >= playerB.privateState.decisionThreshold):  #P1 BETRAY, P2 ALLY
+                    player1InitialVote = "BETRAY"
+                    player2InitialVote = "ALLY"
+                    firstProposal = [playerB.name,playerA.name,"ALLY","ACTIVE"]
+                    
+                    if((aToBState.consValuePrev + aToBState.consValue + aToCState.consValuePrev + aToCState.consValue) > playerA.privateState.decisionThreshold):   #P2 propoe ao P1 que ele faça ally
+                        print("P1 accepted")
+                        return self.decideWithPressure(playerA,opponents[0],2*playerA.privateState.honorFactor,capValue,playerB,"ALLY",1,-2,firstProposal,typecolor)       #the 2 represents the weight of the promise
+                    
+                    secondProposal = [playerA.name,playerB.name,"ALLY","ACTIVE"]
+                    if((bToAState.consValuePrev + bToAState.consValue - (bToCState.consValuePrev + bToCState.consValue)) > playerB.privateState.decisionThreshold):           #P1 propoe ao P2 que ele faça betray
+                        print("P2 accepted")
+                        return self.decideWithPressure(playerB,opponents[0],-2*playerB.privateState.honorFactor,capValue,playerA,"BETRAY",1,-2,secondProposal,typecolor)
                     
                     else:
                         print("no agreement")
@@ -661,9 +684,6 @@ class GameInstance:
             opponentColorType = self.getOpponent(player)
             value = self.getAmbidexResult(playerColorType,opponentColorType)
             player.addPoints(value)
-            print(playerColorType)
-            print(opponentColorType)
-            print("----------")
             self.updateOpponentValues(playerColorType,opponentColorType,player,self.getPlayerByTypecolor(opponentColorType))
             self.updateOutsiderValues(player)
 
