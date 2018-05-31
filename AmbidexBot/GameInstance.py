@@ -60,8 +60,14 @@ class GameInstance:
 
     def createGame(self):
         nameArray = ["Alice","Bob","Carolyn","Dexter","Emily","Frank","Gwen","Haynes","Igor"]
-        while(len(nameArray) > 0):
-            self.PlayerArray.append(Player(list.pop()))
+        for name in nameArray:
+            player = Player(name)
+            self.PlayerArray.append(player)
+            i=0
+            for opponent in player.privateState.opponentStateArray:
+                if(player.getName() != nameArray[i]):
+                    opponent.opponentName = nameArray[i]
+                i+=1
         print("A new game was created.")
         return PlayerArray;
 
@@ -79,7 +85,7 @@ class GameInstance:
         return tabulate(messageArray, headers=['Name', 'Color','Type'])
 
 
-    def startGame(self):
+    def startGame(self):          
         self.GameIterations += 1
         self.randomizeBracelets()
         #self.generatePlayerObjectives()
@@ -451,7 +457,7 @@ class GameInstance:
 
         for key in self.preferenceDict.keys():
             voteArray[self.preferenceDict[key].index(max(self.preferenceDict[key]))] += 1;
-            leastSufferingArray.[self.preferenceDict[key].index(min(self.preferenceDict[key]))] += min(self.preferenceDict[key])
+            leastSufferingArray[self.preferenceDict[key].index(min(self.preferenceDict[key]))] += min(self.preferenceDict[key])
 
         maxVoteValue = max(voteArray)
         drawCheck = 0

@@ -25,6 +25,12 @@ def main():
             ET.SubElement(player_, "Points").text = str(player.getPoints()) 
             ET.SubElement(player_, "Type").text = str(player.getType())
             state_ = ET.SubElement(player_, "State") # definir subStates
+            promises_=ET.SubElement(state_,"PromiseHistory")
+            for promise in player.privateState.promiseHistory:
+                ET.SubElement(promises_,"Promise").text = promise[1] +" "+ promise[2] +" to "+ promise[0] + ". Status: " + promise[3]
+            ET.SubElement(promises_,"DecisionThreshold").text = str(player.privateState.decisionThreshold)
+            ET.SubElement(promises_,"EmotionalMultiplier").text = str(player.privateState.emotionalMultiplier)
+            ET.SubElement(promises_,"HonorFactor").text = str(player.privateState.honorFactor)
             for opponent in player.privateState.opponentStateArray:
                 opState_ = ET.SubElement(state_, "Opponent", name=opponent.opponentName)
                 ET.SubElement(opState_,"ConsiderationValue").text = str(opponent.consValue)
@@ -64,14 +70,23 @@ def main():
         chosenCombination = game.calcVoting()           #calculates which door is chosen for the round
         chosenComb_ = ET.SubElement(round_, "ChosenCombination").text = chosenCombination
         game.setPlayerDoors(chosenCombination)          #locks the players to the respective door according to the chosen combination
-
+        vote_ = ET.SubElement(round_, "Vote")
+        voteDict = {}
         for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
             voteString = game.computeVote(typecolor,20)              #20 is the maximum cap value for which Ally probability is 100%
+            voteDict[typecolor]=voteString
+        for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
+            type_= ET.SubElement(vote_,"Type", name =typecolor).text = voteDict[typecolor]
+            arrayType = game.getPlayerByTypecolor(typecolor)
+            if(len(arrayType)>0):
+                p1 = arrayType[0]
+                opponent = game.getOpponent(p1)
+                ET.SubElement(type_,"Opponent", name=opponent.getColor()).text = voteDict[opponent.getColor()]
+        
+            
         
 
-        game.LockAmbidex=True
-        game.AmbidexInProgress=True
-        #negotiation between pairs, solo vote is linear 
+        #score
         
         #at end game write to log:
         tree_ = ET.ElementTree(game_)
