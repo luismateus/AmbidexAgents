@@ -61,8 +61,14 @@ def main():
             ET.SubElement(player_,"B").text =  str(preferenceArray[1])
             ET.SubElement(player_,"C").text =  str(preferenceArray[2])
              
-        chosenCombination = game.calcVoting()
+        chosenCombination = game.calcVoting()           #calculates which door is chosen for the round
         chosenComb_ = ET.SubElement(round_, "ChosenCombination").text = chosenCombination
+        game.setPlayerDoors(chosenCombination)          #locks the players to the respective door according to the chosen combination
+
+        for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
+            voteString = game.computeVote(typecolor,20)              #20 is the maximum cap value for which Ally probability is 100%
+        
+
         game.LockAmbidex=True
         game.AmbidexInProgress=True
         #negotiation between pairs, solo vote is linear 
