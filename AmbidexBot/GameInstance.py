@@ -1,4 +1,5 @@
 import os
+import math
 
 from Player import Player
 from Color import Color
@@ -290,7 +291,7 @@ class GameInstance:
         resultArray = []
 
         for player in self.PlayerArray:
-            if(self.getPlayerColorType(player) == typecolorString):
+            if(self.getPlayerColorType(player) == typecolorString and player.getStatus() == Status.ALIVE):      #alteraçao feita para o computeVote()
                 resultArray.append(player)
 
         return resultArray
@@ -484,8 +485,27 @@ class GameInstance:
         else:
             return combi[voteArray.index(max(voteArray))]
                     
-                    
-                    
+
+    def computeVote(self,typecolor,capValue):                                   #TENHO DE CONSIDERAR O CASO EM QUE ELES MORREM
+        participatingPlayers = self.getPlayerByTypecolor(typecolor)
+        opponents = self.getPlayerByTypecolor(self.getOpponent(participatingPlayers[0]))
+        if(participatingPlayers == 2):       #aka, if it's a pair vote
+            opponentState1 = participatingPlayers[0].privateState.getOpponentState(opponents[0].name)
+            initialOpinion1 = opponentState1.consValue + opponentState1.consValuePrev + 3*opponentState1.nAlly - 3*opponentState1.nBetray
+            opponentState2 = participatingPlayers[1].privateState.getOpponentState(opponents[0].name)
+            initialOpinion2 = opponentState2.consValue + opponentState2.consValuePrev + 3*opponentState2.nAlly - 3*opponentState2.nBetray
+
+            if(initialOpinion1 > participatingPlayers[0].privateState.decisionThreshold == initialOpinion2 > participatingPlayers[1].privateState.decisionThreshold):  #they both want to ally
+                votingPlayer = random.randrange(2)    #they choose randomly between themselves, since there's no conflict
+                if(votingPlayer == 0):
+                    votingProbabilities = self.computeProbabilities(initialOpinion1,capValue,participatingPlayers[votingPlayer].privateState.decisionThreshold)
+                    choiceGenerated = random.random()
+                    if(choiceGenerated < votingProbabilities[0]):
+                        self.AmbidexGameRound[typecolor] = Vote.ALLY
+                    else:
+                        self.AmbidexGameRound[typecolor] = Vote.BETRAY
+
+           #ELSE: NEGOTIATION PART
 
 
 
@@ -502,3 +522,17 @@ class GameInstance:
         for promise in player.privateState.promiseHistory:
             if(promise[0] == opponentName and promise[1] == player.name and promise[2] == "ALLY"):
                 return 2
+
+    def computeProbabilities(self,proposalValue,capValue,decisionThreshold):
+        finalArray = [0,0]
+        linearProbAlly = (((proposalValue-decisionThreshold)+(capValue-decisionThreshold))/((capValue-decisionThreshold)*2))
+        linearProbBetray = 1 - linearProbAlly
+        if(linearProbAlly > linearProbBetray):
+            finalArray[0] = math.sqrt(linearProbAlly)
+            finalArray[1] = 1 - finalArray[0]
+        elif(linearProbBetray > linearProbAlly):
+            finalArray[1] = math.sqrt(linearProbBetray)
+            finalArray[0] = 1 - finalArray[1]
+        else:
+            finalArray = [0.5,0.5]
+        return finalArray        

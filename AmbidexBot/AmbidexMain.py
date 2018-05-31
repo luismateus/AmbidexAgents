@@ -38,7 +38,14 @@ def main():
         ET.SubElement(combinations_,"CombinationA")
 
         #HERE : put combinations in log
-        chosenCombination = game.calcVoting()
+
+        chosenCombination = game.calcVoting()           #calculates which door is chosen for the round
+        game.setPlayerDoors(chosenCombination)          #locks the players to the respective door according to the chosen combination
+
+        for typecolor in ["RED PAIR","RED SOLO","GREEN PAIR","GREEN SOLO","BLUE PAIR","BLUE SOLO"]:
+            game.computeVote(typecolor,20)              #20 is the maximum cap value for which Ally probability is 100%
+        
+
         #calcular a utilidade para cada player de acordo com os consideration values e retornar combinacao escolhida "por todos"
         #game.setPlayerDoors(combi) // combi returnada na linha anterior
         game.LockAmbidex=True
