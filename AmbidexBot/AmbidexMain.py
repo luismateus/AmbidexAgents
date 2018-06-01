@@ -27,7 +27,9 @@ def main():
             
             player_ = ET.SubElement(players_, "Player", name= player.getName())
             ET.SubElement(player_, "Points").text = str(player.getPoints()) 
+            ET.SubElement(player_, "Color").text = str(player.getColor())
             ET.SubElement(player_, "Type").text = str(player.getType())
+            ET.SubElement(player_, "Typecolor").text = game.getPlayerColorType(player)
             state_ = ET.SubElement(player_, "State") # definir subStates
             promises_=ET.SubElement(state_,"PromiseHistory")
             for promise in player.privateState.promiseHistory:
@@ -77,6 +79,11 @@ def main():
             ET.SubElement(player_,"C").text =  str(preferenceArray[2])
              
         chosenComb_ = ET.SubElement(round_, "ChosenCombination").text = chosenCombination
+
+
+        print(chosenCombination)
+
+
         game.setPlayerDoors(chosenCombination)          #locks the players to the respective door according to the chosen combination
         vote_ = ET.SubElement(round_, "Vote")
         voteDict = {}
@@ -109,8 +116,6 @@ def main():
                     opponent = game.getOpponent(p1)
                     ET.SubElement(type_,"Opponent", name=opponent).text = voteDict[opponent]                
 
-        print("before starting computation")        
-
         game.computeAmbidexGame()
         
         for player in playerArray:
@@ -127,6 +132,7 @@ def main():
             for player in playerArray:
                 player_ = ET.SubElement(final_, "Player", name= player.getName())
                 ET.SubElement(player_, "Points").text = str(player.getPoints()) 
+                ET.SubElement(player_, "Color").text = str(player.getColor())
                 ET.SubElement(player_, "Type").text = str(player.getType())
                 state_ = ET.SubElement(player_, "State") # definir subStates
                 promises_=ET.SubElement(state_,"PromiseHistory")
@@ -149,8 +155,9 @@ def main():
         #at end game write to log:
        
 timeline_ = ET.Element("Timeline")           
-for i in range(50):            
+for i in range(200):
     main()
+    print("------")
 tree_ = ET.ElementTree(timeline_)
 ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d_%H%M%S')

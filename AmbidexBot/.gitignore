@@ -2,3 +2,4 @@ Token.py
 *.pyc
 *.log
 *.pyproj
+*.xml
