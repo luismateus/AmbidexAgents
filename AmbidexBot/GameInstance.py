@@ -56,7 +56,8 @@ class GameInstance:
 
 
     def createGame(self):
-        nameArray = ["Alice","Bob","Carolyn","Dexter","Emily","Frank","Gwen","Haynes","Igor"]
+        #nameArray = ["Alice","Bob","Carolyn","Dexter","Emily","Frank","Gwen","Haynes","Igor"]
+        nameArray = ["Lana","Ignis","Flora","Percy","Iris","Louie","Carter","Douglas","Preston"]
         for name in nameArray:
             player = Player(name)
             self.PlayerArray.append(player)
@@ -681,6 +682,7 @@ class GameInstance:
             self.updateOpponentValues(playerColorType,opponentColorType,player,self.getPlayerByTypecolor(opponentColorType))
             self.updateOutsiderValues(player)
 
+        self.printDecisions()
         self.GameIterations += 1
         self.randomizeBracelets()
         self.AmbidexGameRound.clear()
@@ -781,3 +783,125 @@ class GameInstance:
 
                 elif(outsiderVote == Vote.BETRAY):
                     playerState.consValuePrev -= 1
+
+
+    def setDecisionThreshold(self,player,value):
+        player.privateState.decisionThreshold = value
+
+
+    def setEmotionalMultiplier(self,player,value):
+        player.privateState.emotionalMultiplier = value
+
+
+    def printPlayerPoints(self):
+        res = ""
+        for name in ["Lana","Ignis","Flora","Percy","Iris","Louie","Carter","Douglas","Preston"]:
+            player = self.getPlayer(name)
+            res += player.name + "=" + str(player.points) + "; "
+        return res
+
+
+    def setHG3Scenario(self):
+
+        nameArray = ["Lana","Ignis","Flora","Percy","Iris","Louie","Carter","Douglas","Preston"]
+        decThreshArray = [-3, 6, -1, 5, 5, -2, 2, 2, 6]
+        emotMultArray = [2.5, 2, 1.5, 2, 0.8, 3, 0.5, 0.8, 2]
+        honorFactorArray = [2, -4, 1, 3, 1, 1.5, 1.5, -3, -4]
+
+        consValueDict = {}
+        consValuePrevDict = {}
+
+        consValueDict["Lana"] = [4, 10, 4, 0, 2, 2, 0, -5]
+        #consValueDict["Lana"] = [8, 20, 8, 0, 4, 4, 0, -10]
+        #consValueDict["Lana"] = [-10, -10, -10, -10, -10, -10, -10, -30]
+        consValuePrevDict["Lana"] = [3, 3, 3, -3, -3, 1, -3, -3]
+
+        consValueDict["Ignis"] = [4, 4, 0, -3, 10, 0, -3, -10]
+        #consValueDict["Ignis"] = [8, 8, 0, -6, 20, 0, -6, -20]
+        consValuePrevDict["Ignis"] = [4, 4, 2, -4, 4, -4, -4, -4]
+
+        consValueDict["Flora"] = [10, 3, 5, -3, -5, -3, -5, -10]
+        #consValueDict["Flora"] = [20, 6, 10, -6, -10, -5, -10, -20]
+        consValuePrevDict["Flora"] = [4, 2, 2, -2, -2, -2, -2, -4]
+
+        consValueDict["Percy"] = [4, -10, 1, 1, -4, -4, -4, -4]
+        #consValueDict["Percy"] = [8, -20, 2, 2, -8, -8, -8, -8]
+        consValuePrevDict["Percy"] = [2, -4, 0, -4, -4, -4, -4, -4]
+        
+        consValueDict["Iris"] = [-4, -8, -4, 4, 1, -2, 1, 2]
+        #consValueDict["Iris"] = [-8, -16, -8, 8, 2, -4, 2, 4]
+        consValuePrevDict["Iris"] = [-2, -4, -2, 3, 3, 3, 3, 3]
+
+        consValueDict["Louie"] = [4, 10, 2, -6, -6, 2, 0, 0]
+        #consValueDict["Louie"] = [8, 20, 4, -12, -12, 4, 0, 0]
+        consValuePrevDict["Louie"] = [4, 8, 2, -6, -6, 2, 0, 0]
+
+        consValueDict["Carter"] = [5, 2, 2, -2, 2, 5, 2, -8]
+        #consValueDict["Carter"] = [10, 4, 4, -4, 4, 10, 4, -16]
+        consValuePrevDict["Carter"] = [5, 2, 2, -2, 2, 5, 2, -8]
+
+        consValueDict["Douglas"] = [4, -4, -4, -4, 4, 4, 4, 0]
+        #consValueDict["Douglas"] = [8, -8, -8, -8, 8, 8, 8, 0]
+        consValuePrevDict["Douglas"] = [-4, -4, -4, -4, -4, -4, 4, -4]
+
+        consValueDict["Preston"] = [-6, -6, -6, -6, 4, 4, 0, 0]
+        #consValueDict["Preston"] = [-12, -12, -12, -12, 8, 8, 0, 0]
+        consValuePrevDict["Preston"] = [-6, -6, -6, -6, 4, 4, 4, 4]
+
+        
+        for i in range(len(nameArray)):
+            nameArrayCopy = nameArray.copy()
+            nameArrayCopy.remove(nameArray[i])
+            player = self.getPlayer(nameArray[i])
+            player.privateState.decisionThreshold = decThreshArray[i]
+            player.privateState.emotionalMultiplier = emotMultArray[i]
+            player.privateState.honorFactor = honorFactorArray[i]
+            for j in range(len(nameArrayCopy)):
+                opponent = player.privateState.getOpponentState(nameArrayCopy[j])
+                opponent.consValue = consValueDict[nameArray[i]][j]
+                opponent.consValuePrev = consValuePrevDict[nameArray[i]][j]
+
+
+    def printDecisions(self):
+        res = ""
+        typecolors = []
+        if(self.GameIterations%2 != 0):
+            typecolors = ["RED PAIR","GREEN PAIR","BLUE PAIR"]
+        else:
+            typecolors = ["CYAN PAIR","MAGENTA PAIR","YELLOW PAIR"]
+        
+
+        for typecolor in typecolors:
+            vote = ""
+            oppvote = ""
+            players = self.getPlayerByTypecolor(typecolor)
+
+            playerVote = self.AmbidexGameRound[typecolor]
+            if(playerVote == Vote.ALLY):
+                vote = "ALLY"
+            elif(playerVote == Vote.BETRAY):
+                vote = "BETRAY"
+
+            if(len(players) > 0):
+                opponentTypeColor = self.getOpponent(players[0])
+                opponents = self.getPlayerByTypecolor(opponentTypeColor)
+
+
+                opponentVote = self.AmbidexGameRound[opponentTypeColor]
+                if(opponentVote == Vote.ALLY):
+                    oppvote = "ALLY"
+                elif(opponentVote == Vote.BETRAY):
+                    oppvote = "BETRAY"
+
+
+
+                if(len(players) == 2 and len(opponents) > 0):
+                    res += players[0].name + " & " + players[1].name + ": " + vote + " vs " + opponents[0].name + ": " + oppvote + "; "
+                elif(len(players) == 2 and len(opponents) == 0):
+                    res += players[0].name + " & " + players[1].name + ": " + vote + "; "
+                elif(len(players) == 1 and len(opponents) > 0):
+                    res += players[0].name + ": " + vote + " vs " + opponents[0].name + ": " + oppvote + "; "
+                elif(len(players) == 1 and len(opponents) == 0):
+                    res += players[0].name + ": " + vote + "; "
+
+        print(res)

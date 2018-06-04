@@ -15,7 +15,6 @@ def main():
     startEndGame = False
 
     while(not game.doorNineOpen):
-        #bots recebem as combinacoes e teem de votar numa. HOW? criar array de consideracoes para cada player
         game.clearCombi()
         round_ = ET.SubElement(game_, "Round")
         players_ = ET.SubElement(round_, "Players")
@@ -24,7 +23,12 @@ def main():
                
         for player in playerArray:
             game.setPlayerCombi(player)
-            
+
+            #game.setDecisionThreshold(player,-5)                 #ANÁLISE DOS RESULTADOS APENAS, COMENTAR ESTA LINHA DEPOIS
+            #game.setEmotionalMultiplier(player,2.5)                     #ANÁLISE DOS RESULTADOS APENAS, COMENTAR ESTA LINHA DEPOIS
+            game.setHG3Scenario()
+
+
             player_ = ET.SubElement(players_, "Player", name= player.getName())
             ET.SubElement(player_, "Points").text = str(player.getPoints()) 
             ET.SubElement(player_, "Color").text = str(player.getColor())
@@ -81,8 +85,6 @@ def main():
         chosenComb_ = ET.SubElement(round_, "ChosenCombination").text = chosenCombination
 
 
-        print(chosenCombination)
-
 
         game.setPlayerDoors(chosenCombination)          #locks the players to the respective door according to the chosen combination
         vote_ = ET.SubElement(round_, "Vote")
@@ -115,13 +117,15 @@ def main():
                     p1 = arrayType[0]
                     opponent = game.getOpponent(p1)
                     ET.SubElement(type_,"Opponent", name=opponent).text = voteDict[opponent]                
-
+    
+        print("\nRound " + str(game.GameIterations) + ": ")
         game.computeAmbidexGame()
+        print(game.printPlayerPoints())
         
         for player in playerArray:
             if (player.getPoints()>=9):
                 if(game.willingToLeave(player)):
-                    print(game.getWinners())
+                    print("Winners: " + game.getWinners())
                     startEndGame = True
                     break
         
@@ -155,11 +159,13 @@ def main():
         #at end game write to log:
        
 timeline_ = ET.Element("Timeline")           
-for i in range(200):
+for i in range(3000):
     main()
     print("------")
 tree_ = ET.ElementTree(timeline_)
 ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d_%H%M%S')
-tree_.write("log_" + st+".xml")
+#tree_.write("log_" + st+".xml")
+
+tree_.write("output.xml")
 
